@@ -1,19 +1,3 @@
-# Predictive-Analysis
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>CTR Prediction Project</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-</head>
-<body>
-
   <h1>CTR Prediction Project (Kaggle)</h1>
 
   <div class="section">
