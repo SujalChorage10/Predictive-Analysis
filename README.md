@@ -11,22 +11,6 @@
       background-color: #f9f9f9;
       color: #333;
     }
-    h1 {
-      color: #0056b3;
-    }
-    h2 {
-      color: #333;
-      border-bottom: 2px solid #ddd;
-      padding-bottom: 5px;
-    }
-    p {
-      font-size: 16px;
-      line-height: 1.6;
-    }
-    .section {
-      margin-bottom: 30px;
-    }
-  </style>
 </head>
 <body>
 
