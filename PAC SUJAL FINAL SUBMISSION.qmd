@@ -1,0 +1,88 @@
+---
+title: "PAC SUJAL FINAL SUBMISSION"
+format: html
+---
+
+```{r}
+
+# Load necessary libraries
+library(tidyverse)
+library(xgboost)
+library(caret)
+
+# Load the data
+analysis_data <- read.csv("C:/Users/chora/OneDrive/Desktop/PREDICTIVE ANALYSIS/PAC/analysis_data.csv")
+scoring_data <- read.csv("C:/Users/chora/OneDrive/Desktop/PREDICTIVE ANALYSIS/PAC/scoring_data.csv")
+
+# Data Preparation
+# Replace NA with 0
+analysis_data[is.na(analysis_data)] <- 0
+scoring_data[is.na(scoring_data)] <- 0
+
+# Preprocess categorical variables
+analysis_data <- analysis_data %>%
+  mutate(across(where(is.character), as.factor))
+scoring_data <- scoring_data %>%
+  mutate(across(where(is.character), as.factor))
+
+# Align factor levels between datasets
+for (col in colnames(analysis_data)) {
+  if (is.factor(analysis_data[[col]])) {
+    scoring_data[[col]] <- factor(scoring_data[[col]], levels = levels(analysis_data[[col]]))
+  }
+}
+
+# Create dummy-encoded matrices
+x <- model.matrix(CTR ~ . - id, data = analysis_data)[, -1]
+y <- analysis_data$CTR
+scoring_x <- model.matrix(~ . - id, data = scoring_data)[, colnames(x), drop = FALSE]
+
+# Train-Test Split
+set.seed(123)
+train_index <- createDataPartition(y, p = 0.8, list = FALSE)
+x_train <- x[train_index, ]
+y_train <- y[train_index]
+x_test <- x[-train_index, ]
+y_test <- y[-train_index]
+
+# Define XGBoost Parameters
+params <- list(
+  objective = "reg:squarederror",
+  eval_metric = "rmse",
+  eta = 0.003,                # Very low learning rate
+  max_depth = 4,              # Reduced depth for generalization
+  subsample = 0.85,           # Slightly higher subsample ratio
+  colsample_bytree = 0.8,
+  lambda = 3,                 # Higher L2 regularization
+  alpha = 1                   # Higher L1 regularization
+)
+
+# Train XGBoost Model with Early Stopping
+set.seed(123)
+xgb_model <- xgb.train(
+  params = params,
+  data = xgb.DMatrix(data = x_train, label = y_train),
+  nrounds = 8000,             # High number of rounds for gradual updates
+  early_stopping_rounds = 100, # Stricter early stopping
+  watchlist = list(
+    train = xgb.DMatrix(data = x_train, label = y_train),
+    eval = xgb.DMatrix(data = x_test, label = y_test)
+  ),
+  verbose = 1
+)
+
+# Predict on Test Data
+y_test_pred <- predict(xgb_model, xgb.DMatrix(data = x_test))
+rmse <- sqrt(mean((y_test_pred - y_test)^2))
+print(paste("Test RMSE:", rmse))
+
+# Predict on Scoring Data if RMSE is Acceptable
+scoring_predictions <- predict(xgb_model, xgb.DMatrix(data = scoring_x))
+  
+# Create Submission File
+submission_file <- data.frame(id = scoring_data$id, CTR = scoring_predictions)
+write.csv(submission_file, "sample_submissionak.csv", row.names = FALSE)
+print("Submission file created: sample_submissionak.csv")
+
+```
+
